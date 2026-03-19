@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Lei — Workout</title>
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --surface: #181818;
+      --surface2: #222;
+      --border: #2e2e2e;
+      --accent: #e8c547;
+      --accent2: #4a9eff;
+      --text: #efefef;
+      --text2: #888;
+      --green: #3fb950;
+      --orange: #f0883e;
+      --red: #f85149;
+      --teal: #39d0c4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px 12px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .header-title { font-size: 16px; font-weight: 700; color: var(--accent); letter-spacing: 0.3px; }
+    .header-sub { font-size: 12px; color: var(--text2); }
+    .selectors { display: flex; gap: 12px; flex-wrap: wrap; }
+    .sel-group { display: flex; flex-direction: column; gap: 5px; }
+    .sel-label { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; }
+    .btn-row { display: flex; gap: 4px; flex-wrap: wrap; }
+    .btn-sel {
+      padding: 7px 13px; border: 1px solid var(--border); background: var(--surface2);
+      color: var(--text2); border-radius: 6px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.12s; user-select: none;
+    }
+    .btn-sel:active { opacity: 0.7; }
+    .btn-sel.active { background: var(--accent); color: #000; border-color: var(--accent); }
+    .btn-sel.recipe-btn.active { background: var(--teal); color: #000; border-color: var(--teal); }
+
+    /* ── Main ── */
+    main { padding: 14px 14px 80px; max-width: 580px; margin: 0 auto; }
+
+    /* ── Phase Info ── */
+    .phase-info {
+      background: var(--surface); border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;
+      font-size: 12px; color: var(--text2); line-height: 1.5;
+    }
+    .phase-info strong { color: var(--accent); font-size: 13px; }
+
+    /* ── Section Card ── */
+    .sec {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; margin-bottom: 10px; overflow: hidden;
+    }
+    .sec-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 14px; cursor: pointer; user-select: none;
+    }
+    .sec-hdr:active { background: var(--surface2); }
+    .sec-hdr-left { flex: 1; min-width: 0; }
+    .sec-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .sec-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+    .sec-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .sec-prog { font-size: 11px; color: var(--text2); }
+    .sec-prog.done { color: var(--green); }
+    .sec-arrow { color: var(--text2); font-size: 16px; transition: transform 0.18s; }
+    .sec.open .sec-arrow { transform: rotate(180deg); }
+    .sec-body { display: none; padding: 0 10px 10px; }
+    .sec.open .sec-body { display: block; }
+
+    /* ── Sub-label ── */
+    .sub-lbl {
+      font-size: 10px; color: var(--text2); text-transform: uppercase;
+      letter-spacing: 0.8px; padding: 8px 4px 5px; font-weight: 600;
+    }
+
+    /* ── Exercise Card ── */
+    .ex {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 11px 12px; margin-bottom: 7px;
+      transition: opacity 0.2s, border-color 0.2s;
+    }
+    .ex.done-ex { opacity: 0.42; border-color: var(--green); }
+    .ex-top { display: flex; align-items: flex-start; gap: 8px; }
+    .ex-name { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; line-height: 1.3; }
+    .ex-check {
+      width: 26px; height: 26px; border: 2px solid var(--border); border-radius: 50%;
+      flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; transition: all 0.15s; user-select: none;
+    }
+    .ex.done-ex .ex-check { background: var(--green); border-color: var(--green); color: #fff; }
+    .ex-rx { font-size: 12px; color: var(--accent); font-weight: 600; margin-top: 5px; }
+    .ex-cue { font-size: 12px; color: var(--text2); margin-top: 5px; line-height: 1.55; }
+    .ex-warn { color: var(--orange); font-weight: 600; }
+    .ex-actions { display: flex; gap: 7px; margin-top: 8px; flex-wrap: wrap; }
+    .btn-video {
+      padding: 6px 13px; border: 1px solid var(--orange); background: transparent;
+      color: var(--orange); border-radius: 6px; font-size: 12px; font-weight: 600;
+      cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+      user-select: none;
+    }
+    .btn-video:active { opacity: 0.75; }
+
+    /* ── Reset bar ── */
+    .reset-bar {
+      margin-top: 16px; padding: 13px;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: transparent; color: var(--text2); font-size: 13px;
+      cursor: pointer; width: 100%; text-align: center;
+    }
+    .reset-bar:active { background: var(--surface2); }
+
+    /* ── Recovery / Recipes ── */
+    .recipe-intro {
+      background: var(--surface); border: 1px solid var(--border);
+      border-left: 3px solid var(--teal);
+      border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;
+      font-size: 12px; color: var(--text2); line-height: 1.5;
+    }
+    .recipe-intro strong { color: var(--teal); font-size: 13px; }
+    .recipe-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px; margin-bottom: 12px;
+    }
+    .recipe-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+    .recipe-name { font-size: 16px; font-weight: 700; color: var(--text); }
+    .recipe-badge {
+      font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px;
+      background: rgba(57, 208, 196, 0.15); color: var(--teal); border: 1px solid var(--teal);
+      white-space: nowrap; margin-left: 8px; flex-shrink: 0;
+    }
+    .recipe-macros { display: flex; gap: 10px; margin-bottom: 12px; }
+    .macro-chip {
+      padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      background: var(--surface2); border: 1px solid var(--border);
+    }
+    .macro-chip span { color: var(--text2); font-weight: 400; }
+    .recipe-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+    .recipe-table td { padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--border); }
+    .recipe-table td:first-child { color: var(--text2); padding-right: 12px; }
+    .recipe-table td:last-child { color: var(--accent); font-weight: 600; text-align: right; }
+    .recipe-table tr:last-child td { border-bottom: none; }
+    .recipe-divider { height: 1px; background: var(--border); margin: 8px 0; }
+    .recipe-instructions { font-size: 12px; color: var(--text2); line-height: 1.5; }
+    .recipe-timing { font-size: 12px; color: var(--teal); font-weight: 600; margin-top: 6px; }
+    .protein-note {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;
+      font-size: 12px; color: var(--text2); line-height: 1.6;
+    }
+    .protein-note strong { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="header-title">Lei — Training</div>
+    <div class="header-sub" id="dayLabel">Phase 1 · All Days</div>
+  </div>
+  <div class="selectors">
+    <div class="sel-group">
+      <div class="sel-label">View</div>
+      <div class="btn-row" id="phaseRow">
+        <button class="btn-sel active" data-p="1">Phase 1</button>
+        <button class="btn-sel" data-p="2">Phase 2</button>
+        <button class="btn-sel" data-p="3">Phase 3</button>
+        <button class="btn-sel recipe-btn" data-p="r">Recipes</button>
+      </div>
+    </div>
+    <div class="sel-group" id="dayGroup" style="display:none">
+      <div class="sel-label">Day</div>
+      <div class="btn-row" id="dayRow">
+        <button class="btn-sel active" data-d="1">Day 1</button>
+        <button class="btn-sel" data-d="3">Day 3</button>
+        <button class="btn-sel" data-d="4">Day 4</button>
+        <button class="btn-sel" data-d="7">Day 7</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="content"></main>
+
+<script>
+'use strict';
+
+// ──────────────────────────────────────────────
+// Data helpers
+// ──────────────────────────────────────────────
+function ex(name, rx, opts) { return Object.assign({ name, rx }, opts || {}); }
+function sec(title, dur, items) { return { title, dur: dur || null, items }; }
+function lbl(text) { return { isLabel: true, text }; }
+
+// ──────────────────────────────────────────────
+// Recovery Drink Recipes
+// ──────────────────────────────────────────────
+const RECIPES = [
+  {
+    name: 'Banana Oat',
+    badge: 'Default · post most sessions',
+    protein: '~30 g',
+    carbs: '~62–65 g',
+    timing: 'Drink within 60 min post-training.',
+    instructions: 'Blend 30–45 seconds.',
+    ingredients: [
+      ['Milk or soy milk', '300 ml'],
+      ['Greek yoghurt', '170 g'],
+      ['Banana (peeled)', '120 g'],
+      ['Rolled oats (dry)', '20 g'],
+      ['Cinnamon', '0.25 g'],
+      ['Chia seeds', '15 g'],
+      ['Turmeric', '1 g'],
+      ['Black pepper', 'pinch'],
+    ],
+  },
+  {
+    name: 'Berry Night',
+    badge: 'Late session · before bed',
+    protein: '~30 g',
+    carbs: '~52–55 g',
+    timing: 'Consume 30–60 min before bed if dinner is light.',
+    instructions: 'Blend until smooth.',
+    ingredients: [
+      ['Milk or soy milk', '300 ml'],
+      ['Greek yoghurt', '170 g'],
+      ['Mixed berries (fresh or frozen)', '140 g'],
+      ['Rolled oats (dry)', '15 g'],
+      ['Cacao powder', '5 g'],
+      ['Tart cherry concentrate', '30 ml'],
+      ['Ground flaxseed', '15 g'],
+    ],
+  },
+  {
+    name: 'Apple Cinnamon',
+    badge: 'Slower carbs · evening',
+    protein: '~30 g',
+    carbs: '~57–60 g',
+    timing: 'Drink within 1 hr post-session.',
+    instructions: 'Blend thoroughly.',
+    ingredients: [
+      ['Milk or soy milk', '300 ml'],
+      ['Greek yoghurt', '170 g'],
+      ['Apple (cored, chopped)', '150 g'],
+      ['Rolled oats (dry)', '20 g'],
+      ['Cinnamon', '0.25 g'],
+      ['Fresh ginger', '5 g'],
+      ['Chia seeds', '15 g'],
+      ['Turmeric', '1 g'],
+      ['Black pepper', 'pinch'],
+    ],
+  },
+];
+
+// ──────────────────────────────────────────────
+// Shared section builders
+// ──────────────────────────────────────────────
+
+function S1() {
+  return sec('Handstand Mobility Warm-Up', '~15 min', [
+    ex('Full Body Stretches + Wrist Warm-Up', 'Follow video sequence',
+      { cue: 'Follow the full sequence. Wrist preparation is critical before any handstand work.',
+        video: 'https://youtu.be/mSZWSQSSEjE' }),
+    ex("Butcher's Block", '2 sets · hold 30–60s',
+      { cue: 'Drape forearms over barbell or support. Let thoracic spine extend fully. Relax and breathe into the stretch.',
+        video: 'https://www.youtube.com/watch?v=OhhaK3nDbbA' }),
+    ex('Side Lat Stretch', '2 sets · 30s each side',
+      { cue: '<span class="ex-warn">Left side: gentle only</span> — injured QL. Right side: full stretch. Feel lat lengthening.',
+        video: 'https://www.youtube.com/watch?v=UYjABf_RAcM' }),
+    ex('Dumbbell External Rotation', '12–15 reps each side',
+      { cue: 'Elbow at 90°, anchored to side. Rotate forearm outward only. Slow and controlled. No shrug.',
+        video: 'https://www.youtube.com/watch?v=gOwur9N0cM0' }),
+    ex('Band Shoulder Slide', '12–15 reps',
+      { cue: 'Hands shoulder-width on band. Slide arms fully overhead. Keep band taut throughout. No shrug at top.',
+        video: 'https://www.youtube.com/watch?v=8qMGomw9zIo' }),
+  ]);
+}
+
+function S2p1() {
+  return sec('Handstand Skill Block', '~10 min', [
+    ex('Face-Wall Holds', '2 × 1 min',
+      { cue: 'Nose and toes CLOSE to wall. Hollow body: ribs down, core tight, legs straight. Breathe steadily.',
+        video: 'https://www.youtube.com/watch?v=d7YL4H7afB0' }),
+    ex('Toe Pulls + Heel Pulls', '4 × 5 attempts · 2–4s hold each',
+      { cue: 'Toe pull: press fingertips harder to peel toes off wall — hold 2–4s. Heel pull: shift weight to fingertips to lift heels — hold 2–4s. Each attempt is separate.',
+        video: 'https://www.youtube.com/watch?v=J9-7QXCsPL0' }),
+  ]);
+}
+
+function S2p2() {
+  return sec('Handstand Skill Block', '~12 min', [
+    ex('Face-Wall Holds', '2 × 1 min',
+      { cue: 'Nose and toes CLOSE to wall. Hollow body: ribs down, core tight. Breathe steadily.',
+        video: 'https://www.youtube.com/watch?v=d7YL4H7afB0' }),
+    ex('Toe Pulls + Heel Pulls', '4 × 5 attempts · 2–4s hold each',
+      { cue: 'Toe pull: fingertips peel toes off wall. Heel pull: shift weight to fingertips to lift heels. Hold each 2–4s.',
+        video: 'https://www.youtube.com/watch?v=J9-7QXCsPL0' }),
+    ex('Kick-Up + Pirouette Bail', '10 attempts',
+      { cue: 'Kick up into freestanding HS. To bail safely: pirouette sideways — rotate body and step one foot down. Practice the bail separately first.',
+        video: 'https://www.youtube.com/watch?v=ZzEP7XvkDDk' }),
+  ]);
+}
+
+// Phase 1 full spinal stab block (5 exercises)
+function S3_3() {
+  return sec('Spinal Stabilisation', '~15 min', [
+    ex('Diaphragmatic Breathing', '1 × 10 deep breaths',
+      { cue: 'Hands on belly. Belly rises on inhale — not chest. In through nose 4s, pause, out through mouth 6s. Feel 360° rib cage expansion.',
+        video: 'https://www.youtube.com/watch?v=9jpchJcKivk' }),
+    ex('McGill Bird Dog', '3 × 8 each side · 3s hold',
+      { cue: 'Brace core FIRST. Extend opposite arm + leg simultaneously. Back FLAT — zero rotation, zero sag. 3s hold at full extension. Return slowly.',
+        video: 'https://www.youtube.com/watch?v=S1QbyYZaXIg' }),
+    ex('Dead Bug', '3 × 8 each side · slow',
+      { cue: 'Press lower back INTO floor throughout — never let it lift. Opposite arm + leg extend slowly. Exhale on extension.',
+        video: 'https://www.youtube.com/watch?v=bxn9FBrt4-A' }),
+    ex('Glute Bridge', '3 × 15 · 2s hold at top',
+      { cue: 'Drive through HEELS. Maximum glute squeeze at top. Posteriorly tilt pelvis — no lower back hyperextension. 2s pause.',
+        video: 'https://www.youtube.com/watch?v=Q_Bpj91Yiis' }),
+    ex('Side Plank (knee down)', '3 × 20s each side',
+      { cue: 'Bottom knee bent. Hip fully lifted. Straight line from head to top knee. No sagging.',
+        video: 'https://www.youtube.com/watch?v=ribtncUfriU' }),
+  ]);
+}
+
+// Phase 2/3 condensed spinal stab block — single-leg glute bridge
+function S3_2() {
+  return sec('Spinal Stabilisation', '~8 min · permanent every session', [
+    ex('McGill Bird Dog', '2 × 8 each side · 3s hold',
+      { cue: 'Brace core FIRST. Extend opposite arm + leg. Back FLAT — zero rotation. 3s hold. Return slowly.',
+        video: 'https://www.youtube.com/watch?v=S1QbyYZaXIg' }),
+    ex('Dead Bug', '2 × 8 each side · slow',
+      { cue: 'Lower back INTO floor throughout. Opposite arm + leg extend slowly. Exhale on extension.',
+        video: 'https://www.youtube.com/watch?v=bxn9FBrt4-A' }),
+    ex('Single-Leg Glute Bridge', '2 × 10 each side · 2s hold at top',
+      { cue: 'Drive through single heel. Full glute squeeze at top. Non-working leg raised. Keep hips level — no rotation. 2s pause.',
+        video: 'https://www.youtube.com/watch?v=wQQ6N5piDG0' }),
+    ex('Side Plank (knee down)', '2 × 20s each side',
+      { cue: 'Bottom knee bent. Hip lifted. No sagging.',
+        video: 'https://www.youtube.com/watch?v=ribtncUfriU' }),
+  ]);
+}
+
+function S4() {
+  return sec('Hip Mobility', '~8 min', [
+    ex('90/90 Hip Flexor Stretch', '2 × 60s each side',
+      { cue: 'Front shin parallel to mat, back knee on floor. Tall spine. Gently drive front hip crease toward floor. Breathe.',
+        video: 'https://www.youtube.com/watch?v=VYvMMw8z3rE' }),
+    ex('Pigeon Pose', '2 × 60s each side',
+      { cue: 'Front shin forward, hips square. Fold forward if comfortable. Breathe into outer hip stretch.',
+        video: 'https://www.youtube.com/watch?v=WWJAlAM_Lyw' }),
+  ]);
+}
+
+function S5() {
+  return sec('Upper Body Skill & Strength', '~20 min', [
+    ex('Scap Pull-Up / Active Hang Shrug', '3 × 10 · 3s hold',
+      { cue: 'Start in dead hang. ONLY movement: shrug shoulders DOWN and BACK (not up). 3s hold — feel lats activate. Return to full dead hang.',
+        video: 'https://www.youtube.com/watch?v=-ZIpSoTRsuE' }),
+    ex('Chest-to-Bar Pull-Up', '4–5 × 3 reps · 2–3 min rest',
+      { cue: 'Initiate with scap pull. Drive elbows back and DOWN. Pull chest INTO bar — not chin. No kipping. Full dead hang each rep.',
+        video: 'https://www.youtube.com/watch?v=uBJFngf1ge0' }),
+    ex('Feet-Assisted C2B Negative', '3 × 3 reps · 5s lowering',
+      { cue: 'Use feet to reach chest-to-bar position. Lower SLOWLY over 5s minimum. Lats and bicep focus. Full dead hang at bottom.',
+        video: 'https://www.youtube.com/watch?v=GTEJdkJYd8s' }),
+    ex('Pike Push-Up', '3 × 8–10',
+      { cue: 'Hips high (inverted V). Lower head between hands. Full range — crown toward floor. Builds handstand push-up strength.',
+        video: 'https://www.youtube.com/watch?v=66x0qQiJ-MA' }),
+    ex('Ring Dip', '3 × 6–8 · foot-assist if needed',
+      { cue: 'Full lockout at top — rings turned out. Controlled descent, elbows track back. Foot assist = lightest possible touch only.',
+        video: 'https://www.youtube.com/watch?v=iZAVN-UQ5Zc' }),
+  ]);
+}
+
+function S6() {
+  return sec('Jump Rope Skill Practice', '~8 min', [
+    ex('Double Under / Triple Under', '8 min continuous',
+      { cue: 'Warm up with DU. Attempt TU — focus on triple wrist rotation speed. If TU fails, back to DU immediately. Keep moving. Goal: timing and wrist mechanics.',
+        video: 'https://www.youtube.com/watch?v=ej7J0OKvTHQ' }),
+  ]);
+}
+
+function S7_p1() {
+  return sec('Toe Touching Routine', '~12 min', [
+    ex('Standing Pike', '2 × 30s',
+      { cue: 'Stand tall. Hinge forward at hips. Reach toward floor. Neck relaxed. Feel hamstrings lengthen.',
+        video: 'https://www.youtube.com/watch?v=ghuaqD8rHvY' }),
+    ex('Pigeon Pose', '60s each leg',
+      { cue: 'Front shin parallel. Hips square. Fold forward. Breathe into the stretch.',
+        video: 'https://www.youtube.com/watch?v=WWJAlAM_Lyw' }),
+    ex('Low Lunge with Foot Bind', '60s each side',
+      { cue: 'Deep lunge. Front foot flat. Reach back and grab back foot if able. Hip flexor + quad stretch.',
+        video: 'https://www.youtube.com/watch?v=7D3eyJpUj_o' }),
+    ex('Calf Stretch', '60s each leg',
+      { cue: 'Heel to ground. Straight leg = gastrocnemius. Slightly bent = soleus. Hold both positions.',
+        video: 'https://www.youtube.com/watch?v=27hP-Y0ED_8' }),
+    ex('Supine Hamstring Stretch', '2 × 60s each side',
+      { cue: 'Lie on back. One leg raised (strap or hands). Keep lower back flat on floor. Other leg straight.',
+        video: 'https://www.youtube.com/watch?v=Il1L75v6gq0' }),
+  ]);
+}
+
+function toeTouching(withHipFlexor) {
+  const items = [
+    ex('Standing Pike', '2 × 30s',
+      { cue: 'Stand tall. Hinge forward at hips. Reach toward floor. Neck relaxed.',
+        video: 'https://www.youtube.com/watch?v=ghuaqD8rHvY' }),
+    ex('Pigeon Pose', '60s each leg',
+      { cue: 'Front shin parallel. Hips square. Fold forward. Breathe into the stretch.',
+        video: 'https://www.youtube.com/watch?v=WWJAlAM_Lyw' }),
+    ex('Low Lunge with Foot Bind', '60s each side',
+      { cue: 'Deep lunge. Grab back foot if able. Hip flexor + quad stretch.',
+        video: 'https://www.youtube.com/watch?v=7D3eyJpUj_o' }),
+    ex('Calf Stretch', '60s each leg',
+      { cue: 'Heel to ground. Straight leg = gastrocnemius. Slightly bent = soleus.',
+        video: 'https://www.youtube.com/watch?v=27hP-Y0ED_8' }),
+    ex('Supine Hamstring Stretch', '2 × 60s each side',
+      { cue: 'Lie on back. One leg raised. Keep lower back flat on floor.',
+        video: 'https://www.youtube.com/watch?v=Il1L75v6gq0' }),
+  ];
+  if (withHipFlexor) {
+    items.push(ex('90/90 Hip Flexor Stretch', '2 × 60s each side',
+      { cue: 'Front shin parallel to mat. Tall spine. Drive front hip crease gently toward floor. Breathe.',
+        video: 'https://www.youtube.com/watch?v=VYvMMw8z3rE' }));
+  }
+  return sec('Toe Touching' + (withHipFlexor ? ' + Hip Flexor' : ''), '~12 min', items);
+}
+
+function finDUTU() {
+  return sec('Jump Rope Skill Practice', '~8 min', [
+    ex('Double Under / Triple Under', '8 min continuous',
+      { cue: 'Warm up with DU. Attempt TU — triple wrist rotation. If TU fails, back to DU immediately. Keep moving.',
+        video: 'https://www.youtube.com/watch?v=ej7J0OKvTHQ' }),
+  ]);
+}
+
+function circuitA() {
+  return [
+    lbl('Circuit A'),
+    ex('Landmine Press', '3 × 8–10 each side',
+      { cue: 'Press at 45° arc. Full elbow extension. Opposite foot forward for stability.',
+        video: 'https://www.youtube.com/watch?v=3gYz0bLG-wY' }),
+    ex('Scap Pull-Up / Active Hang Shrug', '3 × 10 · 3s hold',
+      { cue: 'Dead hang → shoulders DOWN and BACK. 3s hold. Return to dead hang.',
+        video: 'https://www.youtube.com/watch?v=-ZIpSoTRsuE' }),
+  ];
+}
+
+function circuitB() {
+  return [
+    lbl('Circuit B — Shoulder Maintenance'),
+    ex('Prone Floor Y-Raise', '3 × 12–15',
+      { cue: 'Face down. Thumbs up. Raise arms in Y position. Squeeze shoulder blades. Feel lower traps work.',
+        video: 'https://www.youtube.com/watch?v=w1AWGKubE5U' }),
+    ex('Lateral Raise (neutral grip)', '3 × 10–15',
+      { cue: 'Slight forward lean. Raise to shoulder height. Slow 3s descent — feel lateral deltoid.',
+        video: 'https://www.youtube.com/watch?v=Y29xKcze8Ik' }),
+    ex('Face Pulls (band/cable)', '3 × 12–15',
+      { cue: 'Pull to face level. Elbows HIGH. External rotation at end. Squeeze rear delts. No shrug.',
+        video: 'https://www.youtube.com/watch?v=g9sehH0vp9U' }),
+  ];
+}
+
+function hyperPro(phase) {
+  const rx = phase === 2 ? '3 × 12 · lower 3s · neutral spine' : '3 × 12 · hold 5 kg plate';
+  const cue = phase === 2
+    ? 'Hips on pad. Neutral spine — no hyperextension at top. FEEL glutes fire. 3s controlled lowering.'
+    : 'Hold 5 kg plate at chest. Neutral spine throughout. Glutes fire at top. 3s lowering.';
+  return sec('Hyper Pro — Back Extension', null, [
+    ex(phase === 2 ? 'Bodyweight Back Extension' : 'Back Extension (5 kg)', rx,
+      { cue, video: 'https://www.youtube.com/watch?v=WJm88qItjeE' }),
+  ]);
+}
+
+// ── Shared pulling blocks ──
+function pullingP2Day3() {
+  return [
+    lbl('Pulling'),
+    ex('Chest-to-Bar Pull-Up', '4–5 × 3 reps · 2–3 min rest',
+      { cue: 'Scap pull → elbows back and down → chest to bar. No kipping. Full dead hang each rep.',
+        video: 'https://www.youtube.com/watch?v=uBJFngf1ge0' }),
+    ex('Feet-Assisted C2B Negative', '3 × 3 reps · 5s lowering',
+      { cue: '5s controlled descent. Lats and bicep focus. Full dead hang at bottom.',
+        video: 'https://www.youtube.com/watch?v=GTEJdkJYd8s' }),
+    ex('False Grip Pull-Up', '3 × 6–8',
+      { cue: 'Hook wrists OVER bar/ring. Maintain false grip throughout. Builds muscle-up transition.',
+        video: 'https://www.youtube.com/watch?v=TIMMk2mEPeE' }),
+    ex('Ring Dip', '3 × 5–6',
+      { cue: 'Full lockout at top (rings turned out). Controlled descent. Elbows track back.',
+        video: 'https://www.youtube.com/watch?v=iZAVN-UQ5Zc' }),
+  ];
+}
+
+// Phase 2 Day 7 — no C2B negatives (eccentrics once/week on Day 3 is sufficient)
+function pullingP2Day7() {
+  return [
+    lbl('Pulling'),
+    ex('Chest-to-Bar Pull-Up', '4 × 3 reps · 2–3 min rest',
+      { cue: 'Quality focus. Scap pull → elbows back → chest to bar. Full dead hang.',
+        video: 'https://www.youtube.com/watch?v=uBJFngf1ge0' }),
+    ex('False Grip Pull-Up', '3 × 6–8',
+      { cue: 'False grip throughout. Muscle-up transition strength.',
+        video: 'https://www.youtube.com/watch?v=TIMMk2mEPeE' }),
+    ex('Ring Dip', '3 × 5–6',
+      { cue: 'Full lockout (rings out). Controlled.',
+        video: 'https://www.youtube.com/watch?v=iZAVN-UQ5Zc' }),
+  ];
+}
+
+function pullingP3Day3() {
+  return [
+    lbl('Pulling — Volume Focus'),
+    ex('Chest-to-Bar Pull-Up', '4–5 × 3 reps · 2–3 min rest',
+      { cue: 'Volume focus. Quality reps. Scap pull → elbows back → chest to bar. Full dead hang.',
+        video: 'https://www.youtube.com/watch?v=uBJFngf1ge0' }),
+    ex('False Grip Pull-Up', '3 × 6–8',
+      { cue: 'False grip. Muscle-up transition strength.',
+        video: 'https://www.youtube.com/watch?v=TIMMk2mEPeE' }),
+    ex('Ring Dip', '3 × 6–8',
+      { cue: 'Full lockout (rings out). Controlled.',
+        video: 'https://www.youtube.com/watch?v=iZAVN-UQ5Zc' }),
+  ];
+}
+
+function pullingP3Day7() {
+  return [
+    lbl('Pulling — Quality Focus'),
+    ex('Chest-to-Bar Pull-Up', '4 × 3 reps · 2–3 min rest',
+      { cue: 'Quality. Maximum height. Chest to bar every rep. Full dead hang.',
+        video: 'https://www.youtube.com/watch?v=uBJFngf1ge0' }),
+    ex('Feet-Assisted C2B Negative', '3 × 3 reps · 5s lowering',
+      { cue: 'Eccentric overload. 5s minimum descent.',
+        video: 'https://www.youtube.com/watch?v=GTEJdkJYd8s' }),
+    ex('False Grip Pull-Up', '3 × 6–8',
+      { cue: 'False grip throughout.',
+        video: 'https://www.youtube.com/watch?v=TIMMk2mEPeE' }),
+    ex('Ring Dip', '3 × 6–8',
+      { cue: 'Full lockout (rings out). Controlled.',
+        video: 'https://www.youtube.com/watch?v=iZAVN-UQ5Zc' }),
+  ];
+}
+
+// ──────────────────────────────────────────────
+// Workout data per phase + day
+// ──────────────────────────────────────────────
+function getWorkout(phase, day) {
+
+  // Phase 1: Hip Mobility (S4) before Spinal Stab (S3_3) — prime hips before loading spine
+  if (phase === 1) return [S1(), S2p1(), S4(), S3_3(), S5(), S6(), S7_p1()];
+
+  const opening = [S1(), S2p2(), S3_2()];
+
+  if (phase === 2) {
+    switch (day) {
+      case 1: return [
+        ...opening,
+        // Lower Body first (compound strength), then Circuit A (accessory)
+        sec('Lower Body + Circuit A', null, [
+          lbl('Lower Body'),
+          ex('Goblet Squat', '3 × 10 · start 12–16 kg',
+            { cue: 'Dumbbell at chest. Squat deep. Knees track over toes. Chest UP at bottom. Drive through heels.',
+              video: 'https://www.youtube.com/watch?v=yGswPtbSlro' }),
+          ex('Single-Leg RDL', '3 × 8 each side · 8–12 kg',
+            { cue: 'Soft knee on standing leg. Hinge at hip — NOT lower back. Feel hamstring load. Pause at bottom.',
+              video: 'https://www.youtube.com/watch?v=Zfr6wizR8rs' }),
+          ex('Step-Up', '3 × 10 each leg · box at knee height',
+            { cue: 'Full foot on box. Drive through heel. Stand fully. Controlled descent. No push-off from back foot.',
+              video: 'https://www.youtube.com/watch?v=vOiHvzj5XhA' }),
+          ...circuitA(),
+        ]),
+        hyperPro(2),
+        finDUTU(),
+        toeTouching(true),
+      ];
+      case 3: return [
+        ...opening,
+        // Pulling (strength skill) first, then Circuit B (accessory), then Core
+        sec('Pulling + Circuit B + Core', null, [
+          ...pullingP2Day3(),
+          ...circuitB(),
+          lbl('Core'),
+          ex('Ab Wheel (from knees)', '3 × 8–10',
+            { cue: 'From knees. Brace core completely before rolling. Roll out as far as you maintain hollow position. Pull back through lats.',
+              video: 'https://www.youtube.com/watch?v=9ZCoAbI7uX0' }),
+        ]),
+        hyperPro(2),
+        toeTouching(true),
+      ];
+      case 4: return [
+        ...opening,
+        // Circuit A on Day 4 (pairs with Day 1 lower body day)
+        sec('Circuit A + Legs + Core', null, [
+          ...circuitA(),
+          lbl('Legs'),
+          ex('Toe Walking', '4 × 60s',
+            { cue: 'Walk on tip-toes continuously. Strengthens tibialis anterior. Maintain balance.',
+              video: 'https://www.youtube.com/watch?v=9_9Od8Lf5Lc' }),
+          ex('Single-Leg Squat (stall bar assisted)', '3 × 8 each leg',
+            { cue: 'Hold stall bar lightly. One-leg squat. Knee tracks over toes. Progress to reducing hand support.',
+              video: 'https://www.youtube.com/watch?v=vq5-vdgJc0I' }),
+          ex('Bulgarian Split Squat (bodyweight)', '3 × 10 each leg',
+            { cue: 'Back foot elevated. Front foot forward enough for vertical shin. Control descent throughout.',
+              video: 'https://www.youtube.com/watch?v=hiLF_pF3EJM' }),
+          ex('Controlled Landing Drill', '3 × 10 · step off 30 cm box',
+            { cue: 'Step (not jump) off box. Absorb: ankle → knee → hip simultaneously. Soft knees. No valgus. <span class="ex-warn">AIM FOR SILENCE.</span> Full reset each rep.',
+              video: 'https://www.youtube.com/watch?v=rqNJdtrNyqQ' }),
+          lbl('Core'),
+          ex('Toes-to-Bar', '3 × 5–8 · <span class="ex-warn">STOP if QL tightens</span>',
+            { cue: '<span class="ex-warn">Stop immediately if left QL tension.</span> Dead hang. Drive knees up first, then kick toes to bar. Controlled return.',
+              video: 'https://www.youtube.com/watch?v=DVMrILiX_oc' }),
+        ]),
+        finDUTU(),
+        toeTouching(true),
+      ];
+      case 7: return [
+        ...opening,
+        // Circuit B on Day 7 (pairs with Day 3 pulling day — shoulder maintenance matches pulling day)
+        sec('Circuit B + Pulling + Pushing + Core', null, [
+          ...circuitB(),
+          ...pullingP2Day7(),
+          lbl('Pushing'),
+          ex('Elevated Pike Push-Up', '3 × 8–10 · feet on ~30–40 cm surface',
+            { cue: 'Feet on stable surface. Hips high. Full HSPU movement pattern. Head between hands at bottom.',
+              video: 'https://www.youtube.com/watch?v=8URA3YSur2M' }),
+          lbl('Core'),
+          ex('Dragon Flag', '3 × 5 · tucked to start',
+            { cue: 'Anchor shoulders on bench or stall bar. Body straight, lower legs-first. Full control. Start tucked — progress to straight when ready.',
+              video: 'https://www.youtube.com/watch?v=1kLc8noY2Ag' }),
+        ]),
+        hyperPro(2),
+        finDUTU(),
+        toeTouching(true),
+      ];
+    }
+  }
+
+  if (phase === 3) {
+    switch (day) {
+      case 1: return [
+        ...opening,
+        // Lower Body + Core first (compound strength), then Circuit A (accessory)
+        sec('Lower Body + Core + Circuit A', null, [
+          lbl('Lower Body'),
+          ex('Barbell Back Squat', '3 × 8 — see return protocol',
+            { cue: '<span class="ex-warn">RETURN PROTOCOL:</span> Wk5 empty bar × 10 · Wk6 50% working weight · Wk7+ working weight. Brace before descent. Bar over mid-foot. Chest UP — do not fold. Drive knees out. Reduce depth if lower back rounds.',
+              video: 'https://www.youtube.com/watch?v=8PMjqgR8Wa8' }),
+          ex('Barbell RDL / Nordic Curl', '3 × 10 / 3 × 6–8 · alternate sessions',
+            { cue: '<span class="ex-warn">RETURN PROTOCOL:</span> RDL: Wk5 40–50%. Bar close to legs. Hinge at hip. | Nordic: Wk5 lower to 45° only. Controlled descent — use hands to stand. Video link is for RDL; Nordic tutorial: youtube.com/watch?v=_e9vFU9-tkc',
+              video: 'https://www.youtube.com/watch?v=uhghy9pFIPY' }),
+          lbl('Core'),
+          ex('Toes-to-Bar', '4 × 10 · 40 total reps',
+            { cue: 'Dead hang. Drive knees up, then kick toes to bar. Controlled descent. No swinging.',
+              video: 'https://www.youtube.com/watch?v=DVMrILiX_oc' }),
+          ...circuitA(),
+        ]),
+        hyperPro(3),
+        finDUTU(),
+        toeTouching(true),
+      ];
+      case 3: return [
+        ...opening,
+        // Box Jump first (explosive/power — NSCA principle), then Pulling, then Circuit B, then Core
+        sec('Power + Pulling + Circuit B + Core', null, [
+          lbl('Power'),
+          ex('Box Jump', '4 × 5 — see return protocol',
+            { cue: '<span class="ex-warn">RETURN PROTOCOL:</span> Wk5 40 cm × soft landing × 3×5. Wk6 working height × 5. Wk7+ 4×5. Land SOFT: ankle → knee → hip. SILENT. No valgus. Full stand and reset between reps.',
+              video: 'https://www.youtube.com/watch?v=G-bxQY57mKc' }),
+          ...pullingP3Day3(),
+          ...circuitB(),
+          lbl('Core'),
+          ex('Ab Wheel (from standing)', '3 × 10–12',
+            { cue: 'Full standing rollout. Brace core completely. Roll to near-horizontal. Pull back through lats. No hyperextension at bottom.',
+              video: 'https://www.youtube.com/watch?v=CxS10wcWq2s' }),
+        ]),
+        hyperPro(3),
+        toeTouching(true),
+      ];
+      case 4: return [
+        ...opening,
+        // Circuit A on Day 4 (rotation — matches Day 1 lower body day)
+        // Hyper Pro removed from Day 4 to reduce volume
+        sec('Circuit A + Legs', null, [
+          ...circuitA(),
+          lbl('Legs'),
+          ex('Toe Walking', '4 × 60s',
+            { cue: 'Walk on tip-toes continuously. Strengthens tibialis anterior.',
+              video: 'https://www.youtube.com/watch?v=9_9Od8Lf5Lc' }),
+          ex('Single-Leg Squat', '3 × 10 each leg · progress stall bar → unassisted',
+            { cue: 'Progress: stall bar assisted → hand touch only → unassisted. Full depth. Knee over toes throughout.',
+              video: 'https://www.youtube.com/watch?v=vq5-vdgJc0I' }),
+          ex('Bulgarian Split Squat', '3 × 10 each leg · add load when bodyweight easy',
+            { cue: 'Back foot elevated. Vertical shin on front leg. Control descent. Add dumbbell when bodyweight 3×10 is comfortable.',
+              video: 'https://www.youtube.com/watch?v=hiLF_pF3EJM' }),
+          ex('Hip Thrust', '3 × 10 · bodyweight → dumbbell → barbell',
+            { cue: '<span class="ex-warn">RETURN PROTOCOL:</span> Wk5 bodyweight only — establish technique. Wk6+ add dumbbell on hips, progress to barbell. SETUP: upper back against power rack crossbar (or low box if available). Feet flat, hip-width. Drive through heels — hips to full extension. Squeeze glutes hard at top. Chin tucked. No hyperextension in lower back.',
+              video: 'https://www.youtube.com/watch?v=pF17m_CXfL0' }),
+        ]),
+        finDUTU(),
+        toeTouching(true),
+      ];
+      case 7: return [
+        ...opening,
+        // Circuit B on Day 7 (rotation — matches Day 3 pulling day)
+        sec('Circuit B + Pulling + Pushing + Core', null, [
+          ...circuitB(),
+          ...pullingP3Day7(),
+          lbl('Pushing'),
+          ex('Elevated Pike Push-Up', '3 × 8–10 · feet on ~30–40 cm surface',
+            { cue: 'Feet on stable surface. Hips high. Full HSPU pattern. Head between hands at bottom.',
+              video: 'https://www.youtube.com/watch?v=8URA3YSur2M' }),
+          lbl('Core'),
+          ex('Dragon Flag', '3 × 5 · tucked → straight',
+            { cue: 'Anchor shoulders. Straight body. Lower legs-first. Control throughout. Progress tucked → partial straight → full.',
+              video: 'https://www.youtube.com/watch?v=1kLc8noY2Ag' }),
+        ]),
+        hyperPro(3),
+        finDUTU(),
+        toeTouching(true),
+      ];
+    }
+  }
+  return [];
+}
+
+// ──────────────────────────────────────────────
+// Phase descriptions
+// ──────────────────────────────────────────────
+const PHASE_INFO = {
+  1: { label: 'Weeks 1–2 · Back Rehab', desc: 'All 4 days identical. Full programme paused. Focus: spinal rehab, handstand foundations, upper body maintenance.' },
+  2: { label: 'Weeks 3–4 · Reintroduction', desc: 'Enter when: pain-free at rest, lacrosse ball no longer sharp, all Phase 1 exercises pain-free × 3 sessions. Day-specific blocks reintroduced.' },
+  3: { label: 'Week 5+ · Full Return', desc: 'Enter when all Phase 2 criteria are met. Barbell squat, RDL, Nordic, and box jump return via weekly loading protocol.' },
+};
+
+// ──────────────────────────────────────────────
+// State
+// ──────────────────────────────────────────────
+let currentPhase = 1; // number or 'r'
+let currentDay = 1;
+
+// ──────────────────────────────────────────────
+// Render — Recipes
+// ──────────────────────────────────────────────
+function renderRecipes() {
+  let html = '';
+  html += `<div class="recipe-intro"><strong>Post-Session Recovery Nutrition</strong><br>
+    Rotate among three options based on session time. All three provide ~30 g protein.
+    Protein target: 131–180 g/day total (1.6–2.2 g/kg — Morton et al. 2018).</div>`;
+
+  html += `<div class="protein-note">
+    <strong>Daily protein breakdown:</strong> ~30 g from recovery drink · ~120 g from meals (~40 g × 3).
+    On rest days: skip the drink and distribute protein across meals.
+  </div>`;
+
+  RECIPES.forEach(r => {
+    html += `<div class="recipe-card">`;
+    html += `<div class="recipe-header"><div class="recipe-name">${r.name}</div><div class="recipe-badge">${r.badge}</div></div>`;
+    html += `<div class="recipe-macros">`;
+    html += `<div class="macro-chip">${r.protein} <span>protein</span></div>`;
+    html += `<div class="macro-chip">${r.carbs} <span>carbs</span></div>`;
+    html += `</div>`;
+    html += `<table class="recipe-table">`;
+    r.ingredients.forEach(([item, amt]) => {
+      html += `<tr><td>${item}</td><td>${amt}</td></tr>`;
+    });
+    html += `</table>`;
+    html += `<div class="recipe-divider"></div>`;
+    html += `<div class="recipe-instructions">${r.instructions}</div>`;
+    html += `<div class="recipe-timing">${r.timing}</div>`;
+    html += `</div>`;
+  });
+
+  document.getElementById('content').innerHTML = html;
+}
+
+// ──────────────────────────────────────────────
+// Render — Workout
+// ──────────────────────────────────────────────
+function render() {
+  if (currentPhase === 'r') {
+    document.getElementById('dayLabel').textContent = 'Recovery Nutrition';
+    document.getElementById('dayGroup').style.display = 'none';
+    renderRecipes();
+    return;
+  }
+
+  const info = PHASE_INFO[currentPhase];
+  const themes = {
+    1: 'Lower Body + Circuit A',
+    3: 'Pulling + Power + Circuit B',
+    4: 'Circuit A + Legs',
+    7: 'Circuit B + Pulling + Pushing'
+  };
+  document.getElementById('dayLabel').textContent = currentPhase === 1
+    ? 'Phase 1 · All Days'
+    : 'Phase ' + currentPhase + ' · Day ' + currentDay + ' — ' + themes[currentDay];
+  document.getElementById('dayGroup').style.display = currentPhase === 1 ? 'none' : 'block';
+
+  const sections = getWorkout(currentPhase, currentDay);
+  let html = `<div class="phase-info"><strong>${info.label}</strong><br>${info.desc}</div>`;
+
+  sections.forEach((s, si) => {
+    const secId = 'sec_' + si;
+    html += `<div class="sec open" id="${secId}">`;
+    html += `<div class="sec-hdr" onclick="toggleSec('${secId}')">`;
+    html += `<div class="sec-hdr-left"><div class="sec-title">${s.title}</div>`;
+    if (s.dur) html += `<div class="sec-meta">${s.dur}</div>`;
+    html += `</div><div class="sec-right">`;
+    html += `<span class="sec-prog" id="prog_${secId}"></span>`;
+    html += `<span class="sec-arrow">&#8964;</span></div></div>`;
+    html += `<div class="sec-body">`;
+
+    s.items.forEach((item, ii) => {
+      if (item.isLabel) {
+        html += `<div class="sub-lbl">${item.text}</div>`;
+        return;
+      }
+      const exId = `ex_${si}_${ii}`;
+      html += `<div class="ex" id="${exId}">`;
+      html += `<div class="ex-top">`;
+      html += `<div class="ex-name">${item.name}</div>`;
+      html += `<div class="ex-check" onclick="toggleEx('${exId}','${secId}')"></div>`;
+      html += `</div>`;
+      html += `<div class="ex-rx">${item.rx}</div>`;
+      if (item.cue) html += `<div class="ex-cue">${item.cue}</div>`;
+      if (item.video) {
+        html += `<div class="ex-actions">`;
+        html += `<a class="btn-video" href="${item.video}" target="_blank" rel="noopener">&#9654; Instructions</a>`;
+        html += `</div>`;
+      }
+      html += `</div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  html += `<button class="reset-bar" onclick="resetAll()">Reset all checkboxes</button>`;
+  document.getElementById('content').innerHTML = html;
+  updateAllProgress();
+}
+
+function toggleSec(id) { document.getElementById(id).classList.toggle('open'); }
+
+function toggleEx(exId, secId) {
+  const el = document.getElementById(exId);
+  const isDone = el.classList.toggle('done-ex');
+  el.querySelector('.ex-check').textContent = isDone ? '✓' : '';
+  updateProgress(secId);
+}
+
+function updateProgress(secId) {
+  const s = document.getElementById(secId);
+  const total = s.querySelectorAll('.ex').length;
+  const done = s.querySelectorAll('.ex.done-ex').length;
+  const prog = document.getElementById('prog_' + secId);
+  if (!prog) return;
+  if (done === 0) { prog.textContent = ''; prog.className = 'sec-prog'; return; }
+  prog.textContent = done + '/' + total;
+  prog.className = done === total ? 'sec-prog done' : 'sec-prog';
+}
+
+function updateAllProgress() {
+  document.querySelectorAll('.sec').forEach(s => updateProgress(s.id));
+}
+
+function resetAll() {
+  document.querySelectorAll('.ex').forEach(el => {
+    el.classList.remove('done-ex');
+    el.querySelector('.ex-check').textContent = '';
+  });
+  updateAllProgress();
+}
+
+// ──────────────────────────────────────────────
+// Selectors
+// ──────────────────────────────────────────────
+document.getElementById('phaseRow').addEventListener('click', e => {
+  const btn = e.target.closest('.btn-sel');
+  if (!btn) return;
+  const val = btn.dataset.p;
+  currentPhase = val === 'r' ? 'r' : parseInt(val);
+  document.querySelectorAll('#phaseRow .btn-sel').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+});
+
+document.getElementById('dayRow').addEventListener('click', e => {
+  const btn = e.target.closest('.btn-sel');
+  if (!btn) return;
+  currentDay = parseInt(btn.dataset.d);
+  document.querySelectorAll('#dayRow .btn-sel').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+});
+
+// ──────────────────────────────────────────────
+// Init
+// ──────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>

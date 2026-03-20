@@ -443,6 +443,14 @@ function finDUTU() {
   ]);
 }
 
+function finDUTU_p2() {
+  return sec('Jump Rope — Reintroduction Protocol', '3–8 min', [
+    ex('Jump Rope Progression', 'See protocol below',
+      { cue: 'Session 1 Phase 2: singles only × 3 min — monitor left QL 24–48h after. | If pain-free: DU × 5 min next session. | If DU pain-free × 2 sessions: attempt TU. | Once DU established: resume standard 8 min DU/TU finisher.',
+        video: 'https://www.youtube.com/watch?v=ej7J0OKvTHQ' }),
+  ]);
+}
+
 function circuitA() {
   return [
     lbl('Circuit A'),
@@ -555,7 +563,7 @@ function pullingP3Day7() {
 function getWorkout(phase, day) {
 
   // Phase 1: Hip Mobility (S4) before Spinal Stab (S3_3) — prime hips before loading spine
-  if (phase === 1) return [S1(), S2p1(), S4(), S3_3(), S5(), S6(), S7_p1()];
+  if (phase === 1) return [S1(), S2p1(), S4(), S3_3(), S5(), S7_p1()];
 
   const opening = [S1(), S2p2(), S3_2()];
 
@@ -578,7 +586,7 @@ function getWorkout(phase, day) {
           ...circuitA(),
         ]),
         hyperPro(2),
-        finDUTU(),
+        finDUTU_p2(),
         toeTouching(true),
       ];
       case 3: return [
@@ -618,7 +626,7 @@ function getWorkout(phase, day) {
             { cue: '<span class="ex-warn">Stop immediately if left QL tension.</span> Dead hang. Drive knees up first, then kick toes to bar. Controlled return.',
               video: 'https://www.youtube.com/watch?v=DVMrILiX_oc' }),
         ]),
-        finDUTU(),
+        finDUTU_p2(),
         toeTouching(true),
       ];
       case 7: return [
@@ -637,7 +645,7 @@ function getWorkout(phase, day) {
               video: 'https://www.youtube.com/watch?v=1kLc8noY2Ag' }),
         ]),
         hyperPro(2),
-        finDUTU(),
+        finDUTU_p2(),
         toeTouching(true),
       ];
     }
